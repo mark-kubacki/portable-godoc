@@ -1,0 +1,11 @@
+*.go      text eol=lf core.whitespace whitespace=indent-with-non-tab,trailing-space,tabwidth=4
+*.service text eol=lf core.whitespace whitespace=trailing-space,tabwidth=2
+*.socket  text eol=lf core.whitespace whitespace=trailing-space,tabwidth=2
+*.sh      text eol=lf core.whitespace whitespace=trailing-space,tabwidth=2
+
+*.yml     text eol=lf core.whitespace whitespace=tab-in-indent,trailing-space,tabwidth=2
+*.yaml    text eol=lf core.whitespace whitespace=tab-in-indent,trailing-space,tabwidth=2
+.git*     text eol=auto core.whitespace whitespace=trailing-space
+
+AUTHORS      text eol=auto whitespace=trailing-space
+CONTRIBUTORS text eol=auto whitespace=trailing-space
