@@ -1,0 +1,9 @@
+Package: godoc
+Version: 1
+Architecture: amd64
+Maintainer: Mark Kubacki <mark@hurrikane.de>
+Description: Golang's documentation server, builder, and runner
+Section: devel
+Priority: optional
+Depends: systemd (>= 239)
+Suggests: golang-go, systemd-container

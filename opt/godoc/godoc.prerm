@@ -1,0 +1,5 @@
+#!/bin/sh
+
+systemctl disable godoc-actual.socket godoc-builder.socket godoc-runner.socket
+systemctl stop godoc-actual.socket godoc-builder.socket godoc-runner.socket
+systemctl stop godoc-actual.service godoc-builder.service godoc-runner.service

@@ -1,0 +1,120 @@
+timeout: 600s
+options:
+  env:
+  - 'ARCHS=amd64 arm64 riscv64 386 arm'
+  - 'GO386=sse2' # Intel Edison
+  - 'GOARM=6'    # ancient Raspberry Pi
+  - 'GOMODCACHE=/var/lib/go'
+  - 'GOCACHE=/var/cache/go'
+  - 'PROJECT_ID=${PROJECT_ID}'
+  volumes:
+  - name: 'GOMODCACHE'
+    path: '/var/lib/go'
+  - name: 'GOCACHE'
+    path: '/var/cache/go'
+  - name: 'worked_sources'
+    path: '/usr/src'
+
+steps:
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'restore cached usr-src'
+  waitFor: ['-']
+  entrypoint: 'bash'
+  args: ['cacheutil.sh', 'cloud::build::cache::restore', '/usr/src']
+- name: 'gcr.io/cloud-builders/git'
+  id: 'fetch playground'
+  waitFor: ['restore cached usr-src']
+  entrypoint: 'bash'
+  args:
+  - opt/godoc/recreate.sh
+  - git::fetch
+  - golang-playground
+  - https://go.googlesource.com/playground
+  - mark
+  - https://github.com/wmark/golang-playground.git
+- name: 'gcr.io/cloud-builders/git'
+  id: 'fetch godoc'
+  waitFor: ['restore cached usr-src', 'fetch playground']
+  entrypoint: 'bash'
+  args:
+  - opt/godoc/recreate.sh
+  - git::fetch
+  - golang-tools
+  - https://go.googlesource.com/tools
+  - mark
+  - https://github.com/wmark/golang-tools.git
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'stash cached usr-src'
+  waitFor: ['fetch playground', 'fetch godoc']
+  entrypoint: 'bash'
+  args: ['cacheutil.sh', 'cloud::build::cache::stash', '/usr/src']
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'restore cached var-lib-go'
+  waitFor: ['fetch playground', 'fetch godoc']
+  entrypoint: 'bash'
+  args: ['cacheutil.sh', 'cloud::build::cache::restore', '/var/lib/go']
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'restore cached var-cache-go'
+  waitFor: ['fetch playground', 'fetch godoc']
+  entrypoint: 'bash'
+  args: ['cacheutil.sh', 'cloud::build::cache::restore', '/var/cache/go']
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'get golang'
+  waitFor: ['-']
+  entrypoint: 'bash'
+  args:
+  - -c
+  - |
+    set -ex
+    docker pull mirror.gcr.io/library/golang:latest
+    docker tag {mirror.gcr.io/library,localhost}/golang:latest
+
+- name: 'localhost/golang'
+  id: 'compile playground'
+  waitFor: ['get golang', 'fetch playground', 'restore cached var-lib-go', 'restore cached var-cache-go']
+  entrypoint: 'bash'
+  args:
+  - opt/godoc/recreate.sh
+  - compile::playground
+- name: 'localhost/golang'
+  id: 'compile godoc'
+  waitFor: ['get golang', 'fetch godoc', 'restore cached var-lib-go', 'restore cached var-cache-go', 'compile playground']
+  entrypoint: 'bash'
+  args:
+  - opt/godoc/recreate.sh
+  - compile::godoc
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'stash cached var-cache-go'
+  waitFor: ['compile playground', 'compile godoc']
+  entrypoint: 'bash'
+  args: ['cacheutil.sh', 'cloud::build::cache::stash', '/var/cache/go']
+- name: 'gcr.io/cloud-builders/gsutil'
+  id: 'stash cached var-lib-go'
+  waitFor: ['compile playground', 'compile godoc']
+  entrypoint: 'bash'
+  args: ['cacheutil.sh', 'cloud::build::cache::stash', '/var/lib/go']
+
+- name: 'gcr.io/cloud-builders/docker'
+  id: 'get packager'
+  waitFor: ['compile playground', 'compile godoc']
+  entrypoint: 'bash'
+  args:
+  - -c
+  - |
+    set -e
+    cp -a Dockerfile.packager "$(mktemp -d)"/
+    cd $$_
+    docker build --force-rm -t "localhost/packager" -f Dockerfile.packager .
+
+- name: 'localhost/packager'
+  id: 'package deb'
+  waitFor: ['get packager']
+  args:
+  - opt/godoc/recreate.sh
+  - package::deb
+
+artifacts:
+  objects:
+    location: 'gs://${PROJECT_ID}_cloudbuild/artifacts/godoc'
+    paths: ['godoc_*.deb']

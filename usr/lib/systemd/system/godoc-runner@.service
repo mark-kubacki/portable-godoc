@@ -1,0 +1,40 @@
+[Unit]
+Description=One-shot binary runner for GoDoc's Playground
+Requires=godoc-runner.socket
+BindsTo=godoc-builder.service
+
+[Service]
+DynamicUser=yes
+Environment=PATH=/usr/local/go-faketime/bin:/opt/go/bin:/usr/local/go/bin:/usr/bin:/bin
+WorkingDirectory=/tmp
+ExecStart=/usr/libexec/godoc-runner
+
+ProtectHome=yes
+ProtectKernelTunables=yes
+PrivateDevices=true
+; PrivateNetwork=true
+PrivateUsers=true
+RestrictRealtime=yes
+InaccessiblePaths=/sys /boot /mnt /srv
+ProtectProc=noaccess
+ProcSubset=pid
+NoNewPrivileges=yes
+# The supplied payload will be run in its own namespace.
+RestrictNamespaces=no
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+; SystemCallFilter=~bind connect listen recv recvfrom recvmmsg recvmmsg_time64 recvmsg send sendmmsg sendmsg sendto setsockopt socket socketcall socketpair
+
+TasksMax=64
+MemoryMax=256M
+DevicePolicy=closed
+OOMScoreAdjust=900
+CPUSchedulingPolicy=batch
+IOSchedulingPriority=7
+
+BindReadOnlyPaths=/bin
+BindReadOnlyPaths=/opt/go
+BindReadOnlyPaths=/usr
+
+[Install]
+Also=godoc-runner.socket

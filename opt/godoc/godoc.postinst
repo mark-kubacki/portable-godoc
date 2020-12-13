@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+systemctl enable godoc-actual.socket godoc-builder.socket godoc-runner.socket
+systemctl start godoc-actual.socket godoc-builder.socket godoc-runner.socket

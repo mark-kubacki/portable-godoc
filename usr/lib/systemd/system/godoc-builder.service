@@ -1,0 +1,35 @@
+[Unit]
+Description=Playground and compiler for GoDoc
+Requires=godoc-builder.socket
+BindsTo=godoc-actual.service
+
+[Service]
+DynamicUser=yes
+CacheDirectory=godoc-builder
+StateDirectory=godoc-builder
+Environment=SANDBOX_BACKEND_URL=http://localhost:6062/run
+Environment=ALLOW_PLAY_MODULE_DOWNLOADS=true
+Environment=PATH=/usr/local/go-faketime/bin:/opt/go/bin:/usr/local/go/bin:/usr/bin:/bin
+Environment=GOPATH=/usr/share/gocode
+WorkingDirectory=/usr/share/godoc
+ExecStart=/usr/libexec/godoc-builder -backend-url=http://localhost:6062/run
+
+Restart=no
+
+ProtectProc=noaccess
+NoNewPrivileges=yes
+RestrictNamespaces=yes
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+; SystemCallFilter=~bind connect listen recv recvfrom recvmmsg recvmmsg_time64 recvmsg send sendmmsg sendmsg sendto setsockopt socket socketcall socketpair
+; SystemCallFilter=~memfd_create unshare
+; SystemCallFilter=~execve execveat
+
+CPUSchedulingPolicy=batch
+
+BindReadOnlyPaths=/bin
+BindReadOnlyPaths=/opt/go
+BindReadOnlyPaths=/usr
+
+[Install]
+Also=godoc-builder.socket

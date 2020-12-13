@@ -1,0 +1,26 @@
+[Unit]
+Description=Golang's documentation server
+Requires=godoc-actual.socket
+
+[Service]
+DynamicUser=yes
+StateDirectory=godoc
+Environment=PLAYGROUND_BACKEND_URL=http://localhost:6061
+Environment=PATH=/usr/local/go-faketime/bin:/opt/go/bin:/usr/local/go/bin:/usr/bin
+Environment=GOPATH=/usr/share/gocode
+ExecStart=/usr/bin/godoc -http=:0 -play
+
+ProtectProc=noaccess
+NoNewPrivileges=yes
+RestrictNamespaces=yes
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service
+; SystemCallFilter=~bind connect listen recv recvfrom recvmmsg recvmmsg_time64 recvmsg send sendmmsg sendmsg sendto setsockopt socket socketcall socketpair
+; SystemCallFilter=~memfd_create unshare
+; SystemCallFilter=~execve execveat
+
+BindReadOnlyPaths=/opt/go
+BindReadOnlyPaths=/usr/share/gocode
+
+[Install]
+Also=godoc-actual.socket

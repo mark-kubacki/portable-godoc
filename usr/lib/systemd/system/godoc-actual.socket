@@ -1,0 +1,6 @@
+[Socket]
+BindToDevice=lo
+ListenStream=6060
+
+[Install]
+WantedBy=sockets.target
