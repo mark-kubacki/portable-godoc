@@ -44,3 +44,12 @@ with the host system to test things otherwise not available there.
 
 If you want examples to experience a *fixed time*, you will need to
 compile a **go-faketime** yourself and copy it to `/usr/local/go-faketime`.
+
+## Credits
+
+ * The poster image, before some minor tweaks, is from https://gopherize.me/
+ * The modified **godoc** is here, in `cmd/godoc`: https://github.com/wmark/golang-tools
+ * Find the **disposable runner**, called `oneshot`, and the modified **builder** (“playground”) here: https://github.com/wmark/golang-playground  
+   … Visit the *feature branches* for all relevant changes.
+ * systemd's documentation is here:  
+   https://www.freedesktop.org/software/systemd/man/systemd.exec.html#DynamicUser=
