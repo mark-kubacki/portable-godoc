@@ -7,6 +7,7 @@ options:
   - 'GOMODCACHE=/var/lib/go'
   - 'GOCACHE=/var/cache/go'
   - 'PROJECT_ID=${PROJECT_ID}'
+  - 'REPO_NAME=${REPO_NAME}'
   volumes:
   - name: 'GOMODCACHE'
     path: '/var/lib/go'
@@ -16,11 +17,10 @@ options:
     path: '/usr/src'
 
 steps:
-- name: 'gcr.io/cloud-builders/gsutil'
+- name: 'gcr.io/blitznote/cacheutil'
   id: 'restore cached usr-src'
   waitFor: ['-']
-  entrypoint: 'bash'
-  args: ['cacheutil.sh', 'cloud::build::cache::restore', '/usr/src']
+  args: ['restore', '/usr/src']
 - name: 'gcr.io/cloud-builders/git'
   id: 'fetch playground'
   waitFor: ['restore cached usr-src']
@@ -43,21 +43,18 @@ steps:
   - https://go.googlesource.com/tools
   - mark
   - https://github.com/wmark/golang-tools.git
-- name: 'gcr.io/cloud-builders/gsutil'
+- name: 'gcr.io/blitznote/cacheutil'
   id: 'stash cached usr-src'
   waitFor: ['fetch playground', 'fetch godoc']
-  entrypoint: 'bash'
-  args: ['cacheutil.sh', 'cloud::build::cache::stash', '/usr/src']
-- name: 'gcr.io/cloud-builders/gsutil'
+  args: ['stash', '/usr/src']
+- name: 'gcr.io/blitznote/cacheutil'
   id: 'restore cached var-lib-go'
   waitFor: ['fetch playground', 'fetch godoc']
-  entrypoint: 'bash'
-  args: ['cacheutil.sh', 'cloud::build::cache::restore', '/var/lib/go']
-- name: 'gcr.io/cloud-builders/gsutil'
+  args: ['restore', '/var/lib/go']
+- name: 'gcr.io/blitznote/cacheutil'
   id: 'restore cached var-cache-go'
   waitFor: ['fetch playground', 'fetch godoc']
-  entrypoint: 'bash'
-  args: ['cacheutil.sh', 'cloud::build::cache::restore', '/var/cache/go']
+  args: ['restore', '/var/cache/go']
 
 - name: 'gcr.io/cloud-builders/docker'
   id: 'get golang'
@@ -84,16 +81,14 @@ steps:
   args:
   - opt/godoc/recreate.sh
   - compile::godoc
-- name: 'gcr.io/cloud-builders/gsutil'
+- name: 'gcr.io/blitznote/cacheutil'
   id: 'stash cached var-cache-go'
   waitFor: ['compile playground', 'compile godoc']
-  entrypoint: 'bash'
-  args: ['cacheutil.sh', 'cloud::build::cache::stash', '/var/cache/go']
-- name: 'gcr.io/cloud-builders/gsutil'
+  args: ['stash', '/var/cache/go']
+- name: 'gcr.io/blitznote/cacheutil'
   id: 'stash cached var-lib-go'
   waitFor: ['compile playground', 'compile godoc']
-  entrypoint: 'bash'
-  args: ['cacheutil.sh', 'cloud::build::cache::stash', '/var/lib/go']
+  args: ['stash', '/var/lib/go']
 
 - name: 'gcr.io/cloud-builders/docker'
   id: 'get packager'
