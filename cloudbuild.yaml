@@ -64,8 +64,10 @@ steps:
   - -c
   - |
     set -ex
-    docker pull mirror.gcr.io/library/golang:latest
-    docker tag {mirror.gcr.io/library,localhost}/golang:latest
+    if ! docker tag golang:cloudbuild_cache localhost/golang:latest; then
+      docker pull mirror.gcr.io/library/golang:latest
+      docker tag {mirror.gcr.io/library,localhost}/golang:latest
+    fi
 
 - name: 'localhost/golang'
   id: 'compile playground'
