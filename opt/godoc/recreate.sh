@@ -2,7 +2,7 @@
 set -eupo pipefail
 
 : ${PN:="godoc"}
-: ${PV:="1"}
+: ${PV:="2"}
 : ${ARCHS:="amd64 arm64 riscv64"}
 
 : ${CACHE_DIRECTORY:="/usr/src"}
@@ -22,11 +22,25 @@ declare -r since_work_epoch="2020-12-07"
 git::fetch() {
   pushd .
   cd "${CACHE_DIRECTORY}"/
+  local mirrors=(${2})
   if [[ ! -d ${1} ]]; then
-    git clone \
-      --single-branch --no-tags --bare \
-      --shallow-since=${since_work_epoch} \
-      "${2}" ${1}
+    for mirror in "${mirrors[@]}"; do
+      set -x
+      git clone \
+        --single-branch --no-tags --bare \
+        --shallow-since=${since_work_epoch} \
+        "${mirror}" ${1} \
+      && break
+      set +x
+    done
+  fi
+  if [[ ! -d ${1} ]]; then
+    for mirror in "${mirrors[@]}"; do
+      git clone \
+        --single-branch --no-tags --bare \
+        "${mirror[0]}" ${1} \
+      && break
+    done
   fi
   cd ${1}
 

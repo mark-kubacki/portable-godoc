@@ -29,7 +29,7 @@ steps:
   - opt/godoc/recreate.sh
   - git::fetch
   - golang-playground
-  - https://go.googlesource.com/playground
+  - https://go.googlesource.com/playground https://github.com/golang/playground.git
   - mark
   - https://github.com/wmark/golang-playground.git
 - name: 'gcr.io/cloud-builders/git'
@@ -40,7 +40,7 @@ steps:
   - opt/godoc/recreate.sh
   - git::fetch
   - golang-tools
-  - https://go.googlesource.com/tools
+  - https://go.googlesource.com/tools https://github.com/golang/tools.git
   - mark
   - https://github.com/wmark/golang-tools.git
 - name: 'gcr.io/blitznote/cacheutil'
