@@ -268,6 +268,7 @@ package::deb() {
       "${D}"/usr/lib/systemd/system/*.service
 
     sed -i \
+      -e "/^Version/c\Version: ${PV}" \
       -e "/^Architecture/c\Architecture: ${deb_arch}" \
       "${D}"/DEBIAN/control
     printf "Installed-Size: %d\n" \
@@ -278,7 +279,7 @@ package::deb() {
     # and as I want to know when that started display those hashes.
     # Go with MD5 because Cloud Storage uses it too.
     (cd "${D}"; md5sum $(find -type f | cut -b 3- | sort))
-    env SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH \
+    env SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH}" XZ_DEFAULTS="-T 0" \
       dpkg-deb -z9 -Zxz --build "${D}" ${PN}_${PV}_${deb_arch}.deb
     md5sum ${PN}_${PV}_${deb_arch}.deb
 
