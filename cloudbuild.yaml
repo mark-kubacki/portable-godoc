@@ -1,4 +1,4 @@
-timeout: 600s
+timeout: 900s
 options:
   env:
   - 'ARCHS=amd64 arm64 riscv64 386 arm'
