@@ -254,6 +254,9 @@ package::deb() {
     "${put[@]}" --mode=0644 \
       --target-directory "${D}"/usr/lib/systemd/system/ \
       usr/lib/systemd/system/${PN}-*
+    "${put[@]}" --mode=0644 \
+      --target-directory "${D}"/usr/lib/tmpfiles.d/ \
+      usr/lib/tmpfiles.d/${PN}*.conf
 
     "${put[@]}" --mode=0754 \
       --target-directory "${D}"/DEBIAN/ \
