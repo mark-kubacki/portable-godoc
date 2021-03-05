@@ -70,7 +70,8 @@ git::fetch() {
 #   N, N+1   Remotes to integrate; only their name (N) will be used.
 git::integrate::remotes() {
   while (( $# >= 2 )); do
-    git merge $(git branch -a --list "${1}/*") -m "Merge remote-tracking branches ${1}/*"
+    git merge $(git branch -a --list "${1}/*") -m "Merge remote-tracking branches ${1}/*" \
+    || return 1
     shift 2
   done
 }
@@ -113,7 +114,7 @@ EOF
       popd
       return 0
     fi
-    git merge --abort || true
+    git merge --abort || git reset --merge
     let rollback+=1
     # Don't try rebases as they likely won't work due to changes in go.sum or go.mod.
   done
